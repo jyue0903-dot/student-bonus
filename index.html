@@ -691,7 +691,8 @@ function renderScore(seat, score) {
 function showRankModal() {
   const students = data.classes[data.currentClass].students
     .filter(s => s.name && s.score > 0)
-    .sort((a, b) => b.score - a.score);
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 10);
 
   if (!students.length) { toast('尚無學生資料'); return; }
 
