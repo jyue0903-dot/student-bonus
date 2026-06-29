@@ -455,10 +455,13 @@ function saveData() {
 
 function initData() {
   const d = loadData();
-  if (d) return d;
+  if (d) {
+    if (d.soundEnabled === undefined) d.soundEnabled = true;
+    return d;
+  }
   const classes = {};
   DEFAULT_CLASSES.forEach(c => { classes[c] = { students: blankStudents() }; });
-  return { classes, currentClass: DEFAULT_CLASSES[0] };
+  return { classes, currentClass: DEFAULT_CLASSES[0], soundEnabled: true };
 }
 
 // ===== State =====
@@ -577,6 +580,7 @@ function showBatchModal() {
 
 // ===== 慶祝音效（拍手鞭炮聲）=====
 function playCelebration() {
+  if (!data.soundEnabled) return;
   if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   const t0 = audioCtx.currentTime;
 
@@ -654,6 +658,7 @@ function clearBatch() {
 // ===== 音效 =====
 let audioCtx = null;
 function playBeep(up) {
+  if (!data.soundEnabled) return;
   if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   const osc = audioCtx.createOscillator();
   const gain = audioCtx.createGain();
@@ -749,6 +754,14 @@ function exportCSV() {
   toast('已匯出 CSV');
 }
 
+// ===== 音效開關 =====
+function toggleSound() {
+  data.soundEnabled = !data.soundEnabled;
+  saveData();
+  render();
+  toast(data.soundEnabled ? '音效已開啟' : '音效已關閉');
+}
+
 // ===== 全部歸零 =====
 function resetScores() {
   if (!confirm('確定將所有學生分數歸零？\n此動作無法復原。')) return;
@@ -835,6 +848,7 @@ function renderTabs() {
   h += `<button class="top-btn orange" data-act="rank">🏆 排行</button>`;
   h += `<button class="top-btn green" data-act="backup">💾 備份</button>`;
   h += `<button class="top-btn" data-act="restore">📂 還原</button>`;
+  h += `<button class="top-btn" data-act="sound">${data.soundEnabled ? '🔊' : '🔇'}</button>`;
   h += `<button class="top-btn gold" data-act="batch">📋 貼上名條</button>`;
   h += `<button class="top-btn" style="border-color:#e53935;color:#e53935" data-act="reset">🗑 清除</button>`;
   h += `</span>`;
@@ -852,6 +866,7 @@ classTabsEl.addEventListener('click', e => {
     case 'backup': backupData(); break;
     case 'restore': restoreData(); break;
     case 'batch': showBatchModal(); break;
+    case 'sound': toggleSound(); break;
     case 'reset': resetScores(); break;
   }
 });
