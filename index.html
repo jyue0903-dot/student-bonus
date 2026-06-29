@@ -749,6 +749,18 @@ function exportCSV() {
   toast('已匯出 CSV');
 }
 
+// ===== 全部歸零 =====
+function resetScores() {
+  if (!confirm('確定將所有學生分數歸零？\n此動作無法復原。')) return;
+  const classes = Object.keys(data.classes);
+  classes.forEach(c => {
+    data.classes[c].students.forEach(s => { s.score = 0; });
+  });
+  saveData();
+  render();
+  toast('所有分數已歸零');
+}
+
 // ===== 備份/還原 =====
 function backupData() {
   const json = JSON.stringify(data, null, 2);
@@ -824,6 +836,7 @@ function renderTabs() {
   h += `<button class="top-btn green" data-act="backup">💾 備份</button>`;
   h += `<button class="top-btn" data-act="restore">📂 還原</button>`;
   h += `<button class="top-btn gold" data-act="batch">📋 貼上名條</button>`;
+  h += `<button class="top-btn" style="border-color:#e53935;color:#e53935" data-act="reset">🔄 歸零</button>`;
   h += `</span>`;
   classTabsEl.innerHTML = h;
 }
@@ -839,6 +852,7 @@ classTabsEl.addEventListener('click', e => {
     case 'backup': backupData(); break;
     case 'restore': restoreData(); break;
     case 'batch': showBatchModal(); break;
+    case 'reset': resetScores(); break;
   }
 });
 
