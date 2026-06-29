@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>學生加分系統</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body {
+  height: 100%;
+  overflow: hidden;
+  font-family: 'Segoe UI', 'Microsoft JhengHei', sans-serif;
+  background: #f0f4f8;
+  user-select: none;
+}
+
+/* ===== 全螢幕 Flex 排版 ===== */
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 10px;
+}
+
+/* ===== 頂部班級列 ===== */
+.class-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  padding: 10px 12px;
+  background: white;
+  border-radius: 0 0 16px 16px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  flex-shrink: 0;
+}
+.class-tab {
+  padding: 6px 16px;
+  border-radius: 16px;
+  border: 2px solid #e0e0e0;
+  background: white;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 700;
+  color: #555;
+  transition: all 0.2s;
+}
+.class-tab:hover { border-color: #4a90d9; color: #4a90d9; }
+.class-tab.active {
+  background: #4a90d9;
+  color: white;
+  border-color: #4a90d9;
+}
+.top-btn {
+  padding: 6px 14px;
+  border-radius: 16px;
+  border: 2px solid #ddd;
+  background: white;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  color: #666;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+.top-btn:hover { border-color: #999; background: #fafafa; }
+.top-btn.gold { border-color: #f0c040; color: #b8860b; }
+.top-btn.gold:hover { background: #fff8e1; }
+.top-btn.green { border-color: #4caf50; color: #4caf50; }
+.top-btn.green:hover { background: #e8f5e9; }
+.top-btn.orange { border-color: #ff9800; color: #ff9800; }
+.top-btn.orange:hover { background: #fff3e0; }
+.top-right { display: flex; gap: 4px; margin-left: auto; flex-wrap: wrap; }
+
+/* ===== 中間班級數字 ===== */
+.class-number-area {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+  overflow: hidden;
+}
+.class-number {
+  font-size: clamp(80px, 20vw, 200px);
+  font-weight: 900;
+  color: #2c3e50;
+  letter-spacing: 16px;
+  cursor: pointer;
+  transition: color 0.2s;
+  line-height: 1;
+}
+.class-number:hover { color: #4a90d9; }
+
+/* ===== 學生加分區（底部） ===== */
+.student-area {
+  flex-shrink: 0;
+  padding: 8px 0 max(8px, env(safe-area-inset-bottom)) 0;
+  background: transparent;
+}
+.student-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  column-gap: 20px;
+  row-gap: 10px;
+}
+.student-card {
+  background: white;
+  border-radius: 14px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  display: flex;
+  align-items: center;
+  padding: 3px 4px;
+  gap: 2px;
+  transition: all 0.15s;
+  min-height: 54px;
+}
+.student-card .info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 1px 0;
+  min-width: 0;
+}
+.student-card .info .seat {
+  font-size: 11px;
+  color: #999;
+  font-weight: 700;
+  line-height: 1.1;
+}
+.student-card .info .name {
+  font-size: 17px;
+  font-weight: 900;
+  color: #222;
+  line-height: 1.2;
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+.student-card .info .name.empty {
+  color: #ccc;
+  font-weight: 400;
+  font-size: 12px;
+}
+.student-card .info .score-badge {
+  font-size: 11px;
+  color: #888;
+  background: #f5f5f5;
+  padding: 0 8px;
+  border-radius: 8px;
+  font-weight: 700;
+  line-height: 1.5;
+  margin-top: 1px;
+}
+.btn-point {
+  width: 32px;
+  min-height: 38px;
+  border: none;
+  border-radius: 8px;
+  font-size: 20px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.08s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+.btn-point:active { transform: scale(0.82); }
+.btn-plus { background: #e8f5e9; color: #2e7d32; }
+.btn-plus:active { background: #a5d6a7; }
+.btn-minus { background: #ffebee; color: #c62828; }
+.btn-minus:active { background: #ef9a9a; }
+
+/* ===== 管理名條模式 ===== */
+.batch-mode .student-card {
+  border: 2px dashed #f0c040;
+  background: #fffde7;
+  border-radius: 10px;
+}
+
+/* ===== Modal ===== */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.45);
+  z-index: 1000;
+  justify-content: center;
+  align-items: center;
+}
+.modal-overlay.show { display: flex; }
+.modal {
+  background: white;
+  border-radius: 20px;
+  padding: 28px;
+  max-width: 700px;
+  width: 95%;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  max-height: 85vh;
+  overflow-y: auto;
+}
+.modal h2 {
+  font-size: 20px;
+  margin-bottom: 14px;
+  color: #2c3e50;
+  font-weight: 800;
+}
+.modal label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: #555;
+  margin-bottom: 4px;
+}
+.modal textarea {
+  width: 100%;
+  padding: 12px 14px;
+  border: 2px solid #ddd;
+  border-radius: 10px;
+  font-size: 15px;
+  font-family: inherit;
+  outline: none;
+  resize: vertical;
+  min-height: 200px;
+}
+.modal textarea:focus { border-color: #4a90d9; }
+.modal input {
+  width: 100%;
+  padding: 10px 14px;
+  border: 2px solid #ddd;
+  border-radius: 10px;
+  font-size: 16px;
+  margin-bottom: 10px;
+  outline: none;
+}
+.modal input:focus { border-color: #4a90d9; }
+.modal-btn-group { display: flex; gap: 8px; justify-content: flex-end; margin-top: 14px; flex-wrap: wrap; }
+.modal-btn {
+  padding: 10px 22px;
+  border-radius: 10px;
+  border: none;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.modal-btn-primary { background: #4a90d9; color: white; }
+.modal-btn-primary:hover { background: #357abd; }
+.modal-btn-secondary { background: #eee; color: #555; }
+.modal-btn-secondary:hover { background: #ddd; }
+.modal-btn-danger { background: #e53935; color: white; }
+.modal-btn-danger:hover { background: #c62828; }
+.modal .hint {
+  font-size: 12px;
+  color: #aaa;
+  margin-top: 6px;
+  line-height: 1.4;
+}
+
+/* ===== 排行榜直向長條圖 ===== */
+.rank-chart {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 4px 0 4px;
+  height: 300px;
+  width: 100%;
+}
+.rank-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  flex: 1;
+  max-width: 52px;
+  height: 100%;
+  min-width: 0;
+}
+.rank-col .rscore {
+  font-size: 11px;
+  font-weight: 700;
+  color: #4a90d9;
+  flex-shrink: 0;
+}
+.rank-col .bar-area {
+  flex: 1;
+  width: 100%;
+  display: flex;
+  flex-direction: column-reverse;
+  overflow: hidden;
+  min-height: 20px;
+}
+.rank-col .bar {
+  width: 100%;
+  border-radius: 4px 4px 0 0;
+  background: linear-gradient(180deg, #4a90d9, #67b8f7);
+  transition: height 0.4s ease;
+}
+.rank-col .rname {
+  font-size: 11px;
+  font-weight: 700;
+  color: #333;
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.rank-col .pos {
+  font-size: 10px;
+  font-weight: 800;
+  color: #aaa;
+  flex-shrink: 0;
+}
+.rank-col:nth-child(1) .pos { color: #ffd700; }
+.rank-col:nth-child(2) .pos { color: #b0b0b0; }
+.rank-col:nth-child(3) .pos { color: #cd7f32; }
+
+/* ===== 慶祝動畫 ===== */
+@keyframes confetti-fall {
+  0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(500px) rotate(720deg); opacity: 0; }
+}
+.confetti-piece {
+  position: fixed;
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  pointer-events: none;
+  z-index: 3000;
+  animation: confetti-fall 2.5s ease-in forwards;
+}
+@keyframes crown-drop {
+  0% { transform: translateY(-80px) scale(0.3); opacity: 0; }
+  60% { transform: translateY(8px) scale(1.1); opacity: 1; }
+  100% { transform: translateY(0) scale(1); opacity: 1; }
+}
+
+/* ===== Toast ===== */
+.toast {
+  position: fixed;
+  bottom: 60px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #333;
+  color: white;
+  padding: 10px 24px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  z-index: 2000;
+  opacity: 0;
+  transition: opacity 0.3s;
+  pointer-events: none;
+  white-space: nowrap;
+}
+.toast.show { opacity: 1; }
+
+/* ===== Responsive ===== */
+@media (max-width: 800px) {
+  .student-grid { column-gap: 14px; row-gap: 8px; }
+  .student-card { min-height: 48px; border-radius: 12px; padding: 2px 3px; }
+  .student-card .info .name { font-size: 14px; }
+  .student-card .info .seat { font-size: 10px; }
+  .btn-point { width: 28px; min-height: 34px; font-size: 17px; border-radius: 7px; }
+  .class-number { font-size: clamp(60px, 16vw, 150px); letter-spacing: 10px; }
+  .class-tabs { padding: 8px 10px; }
+  .class-tab { padding: 5px 12px; font-size: 12px; }
+  .top-btn { padding: 5px 10px; font-size: 12px; }
+}
+@media (max-width: 500px) {
+  .student-grid { column-gap: 10px; row-gap: 6px; }
+  .student-card { min-height: 42px; border-radius: 10px; padding: 2px 2px; }
+  .student-card .info .name { font-size: 12px; }
+  .student-card .info .seat { font-size: 9px; }
+  .student-card .info .score-badge { font-size: 9px; padding: 0 5px; }
+  .btn-point { width: 24px; min-height: 30px; font-size: 14px; border-radius: 6px; }
+  .class-number { font-size: clamp(48px, 14vw, 120px); letter-spacing: 6px; }
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <!-- 頂部班級列 -->
+  <div class="class-tabs" id="classTabs"></div>
+
+  <!-- 中間大數字 -->
+  <div class="class-number-area">
+    <div class="class-number" id="classNumber">301</div>
+  </div>
+
+  <!-- 學生加分區（底部） -->
+  <div class="student-area" id="studentArea">
+    <div class="student-grid" id="studentGrid"></div>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal" id="modalContent"></div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ===== Data =====
+const DEFAULT_CLASSES = ['301', '302', '303'];
+const TOTAL_SEATS = 28;
+
+function blankStudents() {
+  return Array.from({ length: TOTAL_SEATS }, (_, i) => ({
+    seat: i + 1, name: '', score: 0
+  }));
+}
+
+function loadData() {
+  try {
+    const raw = localStorage.getItem('bonus_system2');
+    if (raw) return JSON.parse(raw);
+  } catch (e) {}
+  return null;
+}
+
+function saveData() {
+  localStorage.setItem('bonus_system2', JSON.stringify(data));
+}
+
+function initData() {
+  const d = loadData();
+  if (d) return d;
+  const classes = {};
+  DEFAULT_CLASSES.forEach(c => { classes[c] = { students: blankStudents() }; });
+  return { classes, currentClass: DEFAULT_CLASSES[0] };
+}
+
+// ===== State =====
+const data = initData();
+let batchMode = false;
+
+// ===== DOM refs =====
+const classTabsEl = document.getElementById('classTabs');
+const classNumberEl = document.getElementById('classNumber');
+const studentGridEl = document.getElementById('studentGrid');
+const modalOverlay = document.getElementById('modalOverlay');
+const modalContent = document.getElementById('modalContent');
+const toastEl = document.getElementById('toast');
+
+// ===== Toast =====
+let toastTimer;
+function toast(msg) {
+  toastEl.textContent = msg;
+  toastEl.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toastEl.classList.remove('show'), 1500);
+}
+
+// ===== Modal =====
+function openModal(html) {
+  modalContent.innerHTML = html;
+  modalOverlay.classList.add('show');
+}
+function closeModal() {
+  modalOverlay.classList.remove('show');
+}
+modalOverlay.addEventListener('click', e => { if (e.target === modalOverlay) closeModal(); });
+
+// ===== 班級操作 =====
+function addClass() {
+  let n = 1;
+  while (data.classes[String(n)]) n++;
+  const name = String(n);
+  data.classes[name] = { students: blankStudents() };
+  data.currentClass = name;
+  saveData();
+  render();
+  toast('已新增班級 ' + name);
+}
+
+function switchClass(name) {
+  if (name === data.currentClass) return;
+  data.currentClass = name;
+  saveData();
+  render();
+}
+
+function showEditClassModal() {
+  const cur = data.currentClass;
+  openModal(`
+    <h2>編輯班級</h2>
+    <input type="text" id="clsName" value="${cur.replace(/"/g,'&quot;')}" maxlength="10" placeholder="請輸入班級代號">
+    <div class="modal-btn-group">
+      <button class="modal-btn modal-btn-danger" onclick="deleteClass()">刪除</button>
+      <button class="modal-btn modal-btn-secondary" onclick="closeModal()">取消</button>
+      <button class="modal-btn modal-btn-primary" onclick="saveClassName()">儲存</button>
+    </div>
+  `);
+  setTimeout(() => document.getElementById('clsName').select(), 100);
+}
+
+function saveClassName() {
+  const inp = document.getElementById('clsName');
+  const n = inp.value.trim();
+  if (!n) { toast('請輸入班級代號'); return; }
+  const old = data.currentClass;
+  if (n === old) { closeModal(); return; }
+  if (data.classes[n]) { toast('該班級已存在'); return; }
+  data.classes[n] = data.classes[old];
+  delete data.classes[old];
+  data.currentClass = n;
+  saveData();
+  closeModal();
+  render();
+}
+
+function deleteClass() {
+  if (Object.keys(data.classes).length < 2) { toast('至少保留一個班級'); return; }
+  if (!confirm('確定刪除 ' + data.currentClass + '？')) return;
+  delete data.classes[data.currentClass];
+  data.currentClass = Object.keys(data.classes)[0];
+  saveData();
+  closeModal();
+  render();
+}
+
+// ===== 批次貼上名條 =====
+function showBatchModal() {
+  const students = data.classes[data.currentClass].students;
+  const existing = students.map(s => s.name).filter(Boolean);
+  const hint = existing.length
+    ? existing.join('\n')
+    : '張小華\n王大寶\n李小明\n...';
+
+  openModal(`
+    <h2>貼上全班名條</h2>
+    <label>每行一個姓名，依序對應座號 1 ~ ${TOTAL_SEATS}</label>
+    <textarea id="batchNames" placeholder="第一行 → 座號1&#10;第二行 → 座號2&#10;以此類推...">${hint.replace(/</g,'&lt;')}</textarea>
+    <div class="hint">共 ${TOTAL_SEATS} 個座號，貼入幾行就更新幾位；留空行可設為無姓名。</div>
+    <div class="modal-btn-group">
+      <button class="modal-btn modal-btn-secondary" onclick="closeModal()">取消</button>
+      <button class="modal-btn modal-btn-primary" onclick="applyBatch()">套用</button>
+      <button class="modal-btn modal-btn-danger" onclick="clearBatch()">清除全部姓名</button>
+    </div>
+  `);
+  setTimeout(() => {
+    const ta = document.getElementById('batchNames');
+    ta.focus(); ta.select();
+  }, 100);
+}
+
+// ===== 慶祝音效（拍手鞭炮聲）=====
+function playCelebration() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  const t0 = audioCtx.currentTime;
+
+  function noise(dur, tOff, vol) {
+    const bufSize = audioCtx.sampleRate * dur;
+    const buf = audioCtx.createBuffer(1, bufSize, audioCtx.sampleRate);
+    const data = buf.getChannelData(0);
+    for (let i = 0; i < bufSize; i++) data[i] = (Math.random() * 2 - 1);
+    const src = audioCtx.createBufferSource();
+    src.buffer = buf;
+    const gain = audioCtx.createGain();
+    gain.gain.setValueAtTime(vol, t0 + tOff);
+    gain.gain.exponentialRampToValueAtTime(0.001, t0 + tOff + dur);
+    src.connect(gain);
+    gain.connect(audioCtx.destination);
+    src.start(t0 + tOff);
+    src.stop(t0 + tOff + dur);
+  }
+
+  // 密集隨機拍手/鞭炮聲，覆蓋約 1.5 秒
+  for (let i = 0; i < 20; i++) {
+    const t = 0.03 + Math.random() * 1.3;
+    const d = 0.02 + Math.random() * 0.08;
+    const v = 0.12 + Math.random() * 0.25;
+    noise(d, t, v);
+  }
+}
+
+// ===== 慶祝動畫（撒花）=====
+function celebrate() {
+  playCelebration();
+  const colors = ['#f44336','#e91e63','#9c27b0','#3f51b5','#03a9f4','#009688','#8bc34a','#ffeb3b','#ff9800','#ff5722'];
+  for (let i = 0; i < 80; i++) {
+    const el = document.createElement('div');
+    el.className = 'confetti-piece';
+    el.style.left = Math.random() * 100 + 'vw';
+    el.style.top = '-10px';
+    el.style.background = colors[Math.floor(Math.random() * colors.length)];
+    el.style.width = (6 + Math.random() * 8) + 'px';
+    el.style.height = (6 + Math.random() * 8) + 'px';
+    el.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
+    el.style.animationDelay = Math.random() * 1.5 + 's';
+    el.style.animationDuration = (2 + Math.random() * 1.5) + 's';
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 5000);
+  }
+}
+
+function applyBatch() {
+  const ta = document.getElementById('batchNames');
+  if (!ta) return;
+  const lines = ta.value.split('\n');
+  const students = data.classes[data.currentClass].students;
+  let count = 0;
+  students.forEach((s, i) => {
+    const name = (i < lines.length) ? lines[i].trim() : '';
+    if (name !== s.name) count++;
+    s.name = name;
+  });
+  saveData();
+  closeModal();
+  render();
+  toast('已更新 ' + count + ' 位學生姓名');
+}
+
+function clearBatch() {
+  if (!confirm('確定清除全班姓名？分數會保留。')) return;
+  data.classes[data.currentClass].students.forEach(s => { s.name = ''; });
+  saveData();
+  closeModal();
+  render();
+  toast('姓名已全部清除');
+}
+
+// ===== 音效 =====
+let audioCtx = null;
+function playBeep(up) {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+  osc.type = up ? 'sine' : 'triangle';
+  osc.frequency.value = up ? 1047 : 440;
+  gain.gain.setValueAtTime(0.25, audioCtx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.12);
+  osc.start(audioCtx.currentTime);
+  osc.stop(audioCtx.currentTime + 0.12);
+}
+
+// ===== 個別加分/扣分 =====
+function addPoint(seat) {
+  const s = data.classes[data.currentClass].students.find(x => x.seat === seat);
+  if (!s) return;
+  if (!s.name) { toast('請先設定姓名'); return; }
+  playBeep(true);
+  s.score++;
+  saveData();
+  renderScore(seat, s.score);
+}
+function minusPoint(seat) {
+  const s = data.classes[data.currentClass].students.find(x => x.seat === seat);
+  if (!s) return;
+  if (!s.name) { toast('請先設定姓名'); return; }
+  playBeep(false);
+  s.score--;
+  saveData();
+  renderScore(seat, s.score);
+}
+function renderScore(seat, score) {
+  const el = document.querySelector(`[data-seat="${seat}"] .score-badge`);
+  if (el) el.textContent = score + '分';
+}
+
+// ===== 排行榜（直向長條圖）=====
+function showRankModal() {
+  const students = data.classes[data.currentClass].students
+    .filter(s => s.name)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 10);
+
+  if (!students.length) { toast('尚無學生資料'); return; }
+
+  const maxScore = Math.max(...students.map(s => s.score), 1);
+
+  let html = `<h2>${data.currentClass} TOP 10</h2><div class="rank-chart" id="rankChart">`;
+  students.forEach((s, i) => {
+    const pct = Math.max(Math.round((s.score / maxScore) * 100), 3);
+    html += `
+      <div class="rank-col">
+        <span class="rscore">${s.score}</span>
+        <div class="bar-area"><div class="bar" data-pct="${pct}"></div></div>
+        <span class="rname">${s.name}</span>
+        <span class="pos">${i + 1}</span>
+      </div>`;
+  });
+  html += '</div>';
+  html += `<div class="modal-btn-group"><button class="modal-btn modal-btn-secondary" onclick="closeModal()">關閉</button></div>`;
+  openModal(html);
+
+  // 等 DOM 渲染完後，用 bar-area 的實際高度計算 bar 的像素高度
+  requestAnimationFrame(() => {
+    document.querySelectorAll('.bar-area').forEach(area => {
+      const bar = area.querySelector('.bar');
+      if (!bar) return;
+      const pct = parseFloat(bar.dataset.pct) || 0;
+      const h = area.clientHeight;
+      bar.style.height = Math.round(h * pct / 100) + 'px';
+    });
+  });
+
+  celebrate();
+}
+// ===== 匯出 =====
+function exportCSV() {
+  const students = data.classes[data.currentClass].students;
+  let csv = '座號,姓名,分數\n';
+  students.forEach(s => { csv += s.seat + ',' + (s.name || '') + ',' + s.score + '\n'; });
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = data.currentClass + '_加分報表.csv';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(a.href);
+  toast('已匯出 CSV');
+}
+
+// ===== Render =====
+function saveOneName(idx) {
+  const inp = document.getElementById('editName');
+  if (!inp) return;
+  const students = data.classes[data.currentClass].students;
+  students[idx].name = inp.value.trim();
+  saveData();
+  closeModal();
+  render();
+  toast('姓名已更新');
+}
+
+function render() {
+  renderTabs();
+  renderNumber();
+  renderGrid();
+}
+
+function renderTabs() {
+  const names = Object.keys(data.classes);
+  let h = '';
+  names.forEach(c => {
+    h += `<div class="class-tab${c === data.currentClass ? ' active' : ''}" data-c="${c.replace(/"/g,'&quot;')}">${c}</div>`;
+  });
+  h += `<button class="top-btn" data-act="addClass">+ 新增</button>`;
+  h += `<span class="top-right">`;
+  h += `<button class="top-btn orange" data-act="rank">🏆 排行</button>`;
+  h += `<button class="top-btn green" data-act="export">📥 匯出</button>`;
+  h += `<button class="top-btn gold" data-act="batch">📋 貼上名條</button>`;
+  h += `</span>`;
+  classTabsEl.innerHTML = h;
+}
+
+classTabsEl.addEventListener('click', e => {
+  const tab = e.target.closest('.class-tab');
+  if (tab) { switchClass(tab.dataset.c); return; }
+  const btn = e.target.closest('[data-act]');
+  if (!btn) return;
+  switch (btn.dataset.act) {
+    case 'addClass': addClass(); break;
+    case 'rank': showRankModal(); break;
+    case 'export': exportCSV(); break;
+    case 'batch': showBatchModal(); break;
+  }
+});
+
+function renderNumber() {
+  classNumberEl.textContent = data.currentClass || '---';
+  classNumberEl.title = '點擊編輯班級';
+  classNumberEl.onclick = showEditClassModal;
+}
+
+function renderGrid() {
+  const students = data.classes[data.currentClass]?.students || [];
+  studentGridEl.className = 'student-grid' + (batchMode ? ' batch-mode' : '');
+  let h = '';
+  students.forEach(s => {
+    const has = !!s.name;
+    h += `
+      <div class="student-card" data-seat="${s.seat}">
+        <button class="btn-point btn-plus" data-p="${s.seat}">+</button>
+        <div class="info" data-edit="${s.seat}">
+          <span class="seat">#${String(s.seat).padStart(2,'0')}</span>
+          <span class="name${has ? '' : ' empty'}">${has ? s.name.replace(/</g,'&lt;') : '輸入姓名'}</span>
+          <span class="score-badge">${s.score}分</span>
+        </div>
+        <button class="btn-point btn-minus" data-m="${s.seat}">−</button>
+      </div>`;
+  });
+  studentGridEl.innerHTML = h;
+}
+
+// 學生卡片事件代理（加扣分、編輯）
+studentGridEl.addEventListener('click', e => {
+  const seat = e.target.dataset.p || e.target.dataset.m || e.target.dataset.edit;
+  if (!seat) return;
+  const n = parseInt(seat);
+  if (e.target.dataset.p) { addPoint(n); return; }
+  if (e.target.dataset.m) { minusPoint(n); return; }
+  if (e.target.dataset.edit) {
+    const s = data.classes[data.currentClass].students.find(x => x.seat === n);
+    if (!s) return;
+    const idx = data.classes[data.currentClass].students.indexOf(s);
+    openModal(`
+      <h2>座號 ${String(n).padStart(2,'0')}</h2>
+      <input type="text" id="editName" value="${(s.name||'').replace(/"/g,'&quot;')}" maxlength="10" placeholder="請輸入姓名">
+      <div class="modal-btn-group">
+        <button class="modal-btn modal-btn-secondary" onclick="closeModal()">取消</button>
+        <button class="modal-btn modal-btn-primary" onclick="saveOneName(${idx})">儲存</button>
+      </div>
+    `);
+    setTimeout(() => document.getElementById('editName').select(), 100);
+  }
+});
+
+// ===== Start =====
+render();
+</script>
+</body>
+</html>
