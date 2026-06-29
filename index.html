@@ -299,22 +299,26 @@ html, body {
   border-radius: 4px 4px 0 0;
   background: linear-gradient(180deg, #4a90d9, #67b8f7);
   transition: height 0.4s ease;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 3px;
+}
+.rank-col .bar .rscore {
+  font-size: 12px;
+  font-weight: 700;
+  color: #e3f2fd;
 }
 .rank-col .bar-label {
   text-align: center;
-  line-height: 1.1;
+  line-height: 1;
   flex-shrink: 0;
+  padding-bottom: 2px;
 }
 .rank-col .bar-label .rseat {
-  font-size: 20px;
+  font-size: 22px;
   font-weight: 900;
   color: #222;
-  display: block;
-}
-.rank-col .bar-label .rscore {
-  font-size: 12px;
-  font-weight: 700;
-  color: #4a90d9;
   display: block;
 }
 .rank-col .rname {
@@ -704,10 +708,9 @@ function showRankModal() {
     html += `
       <div class="rank-col">
         <div class="bar-area">
-          <div class="bar" data-pct="${pct}"></div>
+          <div class="bar" data-pct="${pct}"><span class="rscore">${s.score}分</span></div>
           <div class="bar-label">
             <span class="rseat">#${String(s.seat).padStart(2,'0')}</span>
-            <span class="rscore">${s.score}分</span>
           </div>
         </div>
         <span class="pos">${i + 1}</span>
