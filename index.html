@@ -194,7 +194,8 @@ html, body {
   background: rgba(0,0,0,0.45);
   z-index: 1000;
   justify-content: center;
-  align-items: center;
+  align-items: flex-start;
+  padding-top: 60px;
 }
 .modal-overlay.show { display: flex; }
 .modal {
@@ -290,6 +291,13 @@ html, body {
   font-weight: 700;
   color: #4a90d9;
   flex-shrink: 0;
+}
+.rank-col .rseat {
+  font-size: 20px;
+  font-weight: 900;
+  color: #222;
+  flex-shrink: 0;
+  line-height: 1.2;
 }
 .rank-col .bar-area {
   flex: 1;
@@ -691,9 +699,9 @@ function showRankModal() {
     const pct = Math.max(Math.round((s.score / maxScore) * 100), 3);
     html += `
       <div class="rank-col">
-        <span class="rscore">${s.score}</span>
+        <span class="rseat">#${String(s.seat).padStart(2,'0')}</span>
+        <span class="rscore">${s.score}分</span>
         <div class="bar-area"><div class="bar" data-pct="${pct}"></div></div>
-        <span class="rname">${s.name}</span>
         <span class="pos">${i + 1}</span>
       </div>`;
   });
