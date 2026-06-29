@@ -291,7 +291,7 @@ html, body {
   width: 100%;
   display: flex;
   flex-direction: column-reverse;
-  overflow: hidden;
+  align-items: center;
   min-height: 20px;
 }
 .rank-col .bar {
@@ -299,25 +299,23 @@ html, body {
   border-radius: 4px 4px 0 0;
   background: linear-gradient(180deg, #4a90d9, #67b8f7);
   transition: height 0.4s ease;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-start;
-  padding-top: 4px;
 }
-.rank-col .bar .bar-label {
+.rank-col .bar-label {
   text-align: center;
   line-height: 1.1;
+  flex-shrink: 0;
 }
-.rank-col .bar .rseat {
+.rank-col .bar-label .rseat {
   font-size: 20px;
   font-weight: 900;
-  color: #fff;
+  color: #222;
+  display: block;
 }
-.rank-col .bar .rscore {
+.rank-col .bar-label .rscore {
   font-size: 12px;
   font-weight: 700;
-  color: #e3f2fd;
+  color: #4a90d9;
+  display: block;
 }
 .rank-col .rname {
   font-size: 11px;
@@ -692,9 +690,8 @@ function renderScore(seat, score) {
 // ===== 排行榜（直向長條圖）=====
 function showRankModal() {
   const students = data.classes[data.currentClass].students
-    .filter(s => s.name)
-    .sort((a, b) => b.score - a.score)
-    .slice(0, 10);
+    .filter(s => s.name && s.score > 0)
+    .sort((a, b) => b.score - a.score);
 
   if (!students.length) { toast('尚無學生資料'); return; }
 
@@ -705,9 +702,13 @@ function showRankModal() {
     const pct = Math.max(Math.round((s.score / maxScore) * 100), 3);
     html += `
       <div class="rank-col">
-        <div class="bar-area"><div class="bar" data-pct="${pct}">
-          <div class="bar-label"><span class="rseat">#${String(s.seat).padStart(2,'0')}</span><br><span class="rscore">${s.score}分</span></div>
-        </div></div>
+        <div class="bar-area">
+          <div class="bar" data-pct="${pct}"></div>
+          <div class="bar-label">
+            <span class="rseat">#${String(s.seat).padStart(2,'0')}</span>
+            <span class="rscore">${s.score}分</span>
+          </div>
+        </div>
         <span class="pos">${i + 1}</span>
       </div>`;
   });
