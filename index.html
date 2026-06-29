@@ -730,6 +730,51 @@ function exportCSV() {
   toast('已匯出 CSV');
 }
 
+// ===== 備份/還原 =====
+function backupData() {
+  const json = JSON.stringify(data, null, 2);
+  const blob = new Blob([json], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  const now = new Date();
+  const ts = now.getFullYear() + String(now.getMonth()+1).padStart(2,'0') + String(now.getDate()).padStart(2,'0') + '_' + String(now.getHours()).padStart(2,'0') + String(now.getMinutes()).padStart(2,'0');
+  a.download = '加分系統備份_' + ts + '.json';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(a.href);
+  toast('備份已下載');
+}
+
+function restoreData() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = '.json';
+  input.onchange = e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      try {
+        const imported = JSON.parse(ev.target.result);
+        if (!imported.classes || !imported.currentClass) {
+          toast('備份格式不正確');
+          return;
+        }
+        if (!confirm('確定還原？\n還原後現有資料會被覆蓋。')) return;
+        Object.assign(data, imported);
+        saveData();
+        render();
+        toast('資料已還原');
+      } catch (err) {
+        toast('檔案讀取失敗');
+      }
+    };
+    reader.readAsText(file);
+  };
+  input.click();
+}
+
 // ===== Render =====
 function saveOneName(idx) {
   const inp = document.getElementById('editName');
@@ -757,7 +802,8 @@ function renderTabs() {
   h += `<button class="top-btn" data-act="addClass">+ 新增</button>`;
   h += `<span class="top-right">`;
   h += `<button class="top-btn orange" data-act="rank">🏆 排行</button>`;
-  h += `<button class="top-btn green" data-act="export">📥 匯出</button>`;
+  h += `<button class="top-btn green" data-act="backup">💾 備份</button>`;
+  h += `<button class="top-btn" data-act="restore">📂 還原</button>`;
   h += `<button class="top-btn gold" data-act="batch">📋 貼上名條</button>`;
   h += `</span>`;
   classTabsEl.innerHTML = h;
@@ -771,7 +817,8 @@ classTabsEl.addEventListener('click', e => {
   switch (btn.dataset.act) {
     case 'addClass': addClass(); break;
     case 'rank': showRankModal(); break;
-    case 'export': exportCSV(); break;
+    case 'backup': backupData(); break;
+    case 'restore': restoreData(); break;
     case 'batch': showBatchModal(); break;
   }
 });
