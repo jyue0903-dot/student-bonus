@@ -72,6 +72,12 @@ html, body {
 .top-btn.green:hover { background: #e8f5e9; }
 .top-btn.orange { border-color: #ff9800; color: #ff9800; }
 .top-btn.orange:hover { background: #fff3e0; }
+.sound-icon { display: inline-flex; align-items: center; position: relative; }
+.sound-icon.mute .speaker { opacity: 0.6; }
+.sound-icon.mute .mute-x {
+  position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%);
+  font-size: 18px; font-weight: 900; color: #e53935; line-height: 1;
+}
 .top-right { display: flex; gap: 4px; margin-left: auto; flex-wrap: wrap; }
 
 /* ===== 中間班級數字 ===== */
@@ -848,7 +854,7 @@ function renderTabs() {
   h += `<button class="top-btn orange" data-act="rank">🏆 排行</button>`;
   h += `<button class="top-btn green" data-act="backup">💾 備份</button>`;
   h += `<button class="top-btn" data-act="restore">📂 還原</button>`;
-  h += `<button class="top-btn" data-act="sound">${data.soundEnabled ? '🔈' : '🔇'}</button>`;
+  h += `<button class="top-btn" data-act="sound">${data.soundEnabled ? '<span class="sound-icon">🔈</span>' : '<span class="sound-icon mute"><span class="speaker">🔈</span><span class="mute-x">✕</span></span>'}</button>`;
   h += `<button class="top-btn gold" data-act="batch">📋 貼上名條</button>`;
   h += `<button class="top-btn" style="border-color:#e53935;color:#e53935" data-act="reset">🗑 清除</button>`;
   h += `</span>`;
