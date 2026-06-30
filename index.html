@@ -769,7 +769,18 @@ function toggleSound() {
 
 // ===== 全部歸零 =====
 function resetScores() {
-  if (!confirm('確定將所有學生分數歸零？\n此動作無法復原。')) return;
+  openModal(`
+    <h2>⚠️ 確認清除</h2>
+    <p>確定將所有班級的學生分數歸零？<br>此動作無法復原。</p>
+    <div class="modal-btn-group">
+      <button class="modal-btn modal-btn-secondary" onclick="closeModal()">取消</button>
+      <button class="modal-btn modal-btn-danger" onclick="doReset()">確定清除</button>
+    </div>
+  `);
+}
+
+function doReset() {
+  closeModal();
   const classes = Object.keys(data.classes);
   classes.forEach(c => {
     data.classes[c].students.forEach(s => { s.score = 0; });
