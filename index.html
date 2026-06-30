@@ -779,6 +779,30 @@ function resetScores() {
   toast('所有分數已歸零');
 }
 
+// ===== 結算匯出 =====
+function settleScores() {
+  const now = new Date();
+  const dateStr = now.getFullYear() + '年' + (now.getMonth()+1) + '月' + now.getDate() + '日';
+  if (!confirm('將匯出所有班級的加分報表（' + dateStr + '）\n要繼續嗎？')) return;
+
+  let csv = '班級,座號,姓名,分數\n';
+  const classOrder = Object.keys(data.classes);
+  classOrder.forEach(c => {
+    data.classes[c].students.forEach(s => {
+      csv += c + ',' + s.seat + ',' + (s.name || '') + ',' + s.score + '\n';
+    });
+  });
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = '加分結算_' + now.getFullYear() + String(now.getMonth()+1).padStart(2,'0') + String(now.getDate()).padStart(2,'0') + '.csv';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(a.href);
+  toast('結算報表已匯出');
+}
+
 // ===== 備份/還原 =====
 function backupData() {
   const json = JSON.stringify(data, null, 2);
@@ -849,13 +873,14 @@ function renderTabs() {
     h += `<div class="class-tab${c === data.currentClass ? ' active' : ''}" data-c="${c.replace(/"/g,'&quot;')}">${c}</div>`;
   });
   h += `<button class="top-btn" data-act="addClass">+ 新增</button>`;
+  h += `<button class="top-btn gold" data-act="batch">📋 貼上名條</button>`;
   h += `<span class="top-right">`;
   h += `<button class="top-btn orange" data-act="rank">🏆 排行</button>`;
   h += `<button class="top-btn green" data-act="backup">💾 備份</button>`;
   h += `<button class="top-btn" data-act="restore">📂 還原</button>`;
   h += `<button class="top-btn" data-act="sound">${data.soundEnabled ? '<span class="sound-icon">🔈</span>' : '<span class="sound-icon mute"><span class="speaker">🔈</span><span class="mute-x">✕</span></span>'}</button>`;
-  h += `<button class="top-btn gold" data-act="batch">📋 貼上名條</button>`;
   h += `<button class="top-btn" style="border-color:#e53935;color:#e53935" data-act="reset">🗑 清除</button>`;
+  h += `<button class="top-btn" data-act="settle">📊 結算</button>`;
   h += `</span>`;
   classTabsEl.innerHTML = h;
 }
@@ -873,6 +898,7 @@ classTabsEl.addEventListener('click', e => {
     case 'batch': showBatchModal(); break;
     case 'sound': toggleSound(); break;
     case 'reset': resetScores(); break;
+    case 'settle': settleScores(); break;
   }
 });
 
